@@ -1,0 +1,97 @@
+# A Field Guide to Better Reading
+
+Reading is not a passive act. The most effective readers constantly negotiate between **fluency** and **curiosity**: they move quickly through familiar language, then slow down when a sentence introduces an unexpected concept.
+
+A local annotation layer can make that rhythm visible. Instead of looking up every unfamiliar word in a separate dictionary, the reader receives a compact Chinese gloss directly after the term that deserves attention.
+
+## Why frequency matters
+
+English vocabulary is unevenly distributed. A small set of high-frequency words accounts for a disproportionate share of ordinary prose. If those words are annotated all the time, the page becomes noisy and the learner loses the original flow.
+
+The better strategy is to establish a threshold:
+
+1. Hide the most common words that a learner is likely to already know.
+2. Mark medium-frequency vocabulary with a restrained annotation.
+3. Make rare and technical terms unmistakable.
+4. Let the reader adjust the threshold whenever the material becomes easier.
+
+> A good annotation system should disappear when it is not needed. Its purpose is to support attention, not compete with it.
+
+## From isolated words to useful phrases
+
+Word-by-word translation is often misleading. An expression such as **artificial intelligence** is more useful as a single unit than as two independent annotations. Likewise, **sustainable development**, **supply chain**, and **version control** carry specialized meanings that emerge only when the words remain together.
+
+This reader therefore gives phrase matching priority. When a recognized expression appears in the text, its Chinese equivalent follows the complete phrase. If no phrase matches, the system falls back to individual words.
+
+Consider the following sentence:
+
+> A resilient system can absorb uncertainty, recover from failure, and preserve transparency under pressure.
+
+Several terms deserve a gloss:
+
+| Word | Frequency signal | Possible Chinese gloss |
+| --- | --- | --- |
+| resilient | lower frequency | 有韧性 |
+| uncertainty | medium frequency | 不确定性 |
+| transparency | medium frequency | 透明度 |
+| pressure | relatively common | 压力 |
+
+## A practical reading loop
+
+Effective reading can be described as a repeating cycle:
+
+- **Preview** the title, headings, and any visual structure.
+- **Read** a complete paragraph without stopping immediately.
+- **Notice** the words that block comprehension.
+- **Use** the inline Chinese gloss to restore meaning.
+- **Return** to the sentence and read it once more without assistance.
+
+The final return step matters. A dictionary lookup is only useful when the translated term is placed back into its original context.
+
+## Working with Markdown
+
+Markdown is a good format for this kind of reading because it keeps structure explicit while remaining easy to edit. Headings, lists, quotations, links, and tables can all be recognized locally.
+
+For example, a technical note might contain a short code sample:
+
+```python
+def reading_level(word_frequency_rank, familiar_threshold):
+    if word_frequency_rank <= familiar_threshold:
+        return "known"
+    if word_frequency_rank <= 5000:
+        return "medium"
+    return "rare"
+```
+
+Code blocks should remain untouched. Annotations belong in prose, not in syntax where a replacement could change the meaning of the program.
+
+## Choosing a threshold
+
+There is no universally correct threshold. A beginner may prefer to annotate almost every word, while an advanced reader may hide the first several thousand entries. The setting should change with the text:
+
+- Use a lower threshold for dense academic writing.
+- Use a higher threshold for casual narratives.
+- Import a personal vocabulary list for words that are already secure.
+- Switch to **all annotations** temporarily when checking dictionary coverage.
+
+The goal is not to annotate every possible word. The goal is to create a calm, repeatable reading habit in which unfamiliar language is clarified at the exact moment it becomes relevant.
+
+## Formulas stay local too
+
+Inline mathematics such as $E = mc^2$ remains part of the sentence, while display equations receive their own reading space:
+
+$$
+a _ {1} x _ {1} + a _ {2} x _ {2} + \dots + a _ {n} x _ {n} = b \tag {1}
+$$
+
+KaTeX renders the LaTeX locally, so formulas never leave the computer and are excluded from vocabulary annotation.
+
+## Closing note
+
+Language learning benefits from friction in the right places. Too little friction produces superficial recognition; too much friction destroys momentum. A frequency-aware reader keeps the interruption proportional to the difficulty of the word.
+
+Open another Markdown file, adjust the threshold, and observe how the page changes. The structure stays the same, but the density of Chinese support follows your vocabulary rather than the preferences of the document.
+
+---
+
+*Data in this local reader comes from wordfreq and CC-CEDICT. No text is uploaded.*

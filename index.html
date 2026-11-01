@@ -1,0 +1,515 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="完全本地运行的 Markdown 阅读器，按英语词频在原文后标注简体中文，并支持 LaTeX 公式。"
+    />
+    <title>词频阅读室 · 本地 Markdown 中文标注</title>
+    <link rel="stylesheet" href="./vendor/katex/katex.min.css" />
+    <link rel="stylesheet" href="./app.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#content">跳到正文</a>
+
+    <div class="app" id="app">
+      <header class="topbar">
+        <div class="topbar__left">
+          <button
+            class="icon-button mobile-only"
+            id="sidebarToggle"
+            type="button"
+            aria-label="打开侧栏"
+            aria-controls="sidebar"
+          >
+            ☰
+          </button>
+          <div class="brand" aria-label="词频阅读室">
+            <span class="brand__seal" aria-hidden="true">读</span>
+            <span class="brand__copy">
+              <strong>词频阅读室</strong>
+              <small>LOCAL READING ROOM</small>
+            </span>
+          </div>
+          <div class="document-status">
+            <span class="document-status__dot" aria-hidden="true"></span>
+            <span id="fileTitle">尚未打开文稿</span>
+            <span class="document-status__meta" id="readTime"></span>
+          </div>
+        </div>
+
+        <div class="topbar__actions">
+          <button
+            class="toolbar-button"
+            id="frequencyToggle"
+            type="button"
+            aria-pressed="true"
+            title="关闭或恢复词频标注"
+          >
+            <span aria-hidden="true">＃</span>
+            <span class="toolbar-button__label">显示词频</span>
+          </button>
+          <button class="toolbar-button" id="glossToggle" type="button" aria-pressed="true">
+            <span aria-hidden="true">中</span>
+            <span class="toolbar-button__label">显示中文</span>
+          </button>
+          <button class="toolbar-button" id="highlightButton" type="button" title="高亮选中的文字">
+            <span aria-hidden="true">✎</span>
+            <span class="toolbar-button__label">高亮</span>
+          </button>
+          <button
+            class="toolbar-button"
+            id="clickModeToggle"
+            type="button"
+            aria-pressed="true"
+            title="开启后点正文里的单词即可标注，并加入生词表"
+          >
+            <span aria-hidden="true">⌖</span>
+            <span class="toolbar-button__label">取词标注</span>
+          </button>
+          <button
+            class="toolbar-button"
+            id="immersiveToggle"
+            type="button"
+            aria-pressed="false"
+            title="进入沉浸阅读：只留下正文（按 Esc 或 I 退出）"
+          >
+            <span aria-hidden="true">⤢</span>
+            <span class="toolbar-button__label">沉浸阅读</span>
+          </button>
+          <button class="toolbar-button" id="themeToggle" type="button" aria-label="切换深色模式">
+            <span aria-hidden="true" id="themeIcon">◐</span>
+            <span class="toolbar-button__label">主题</span>
+          </button>
+          <button class="toolbar-button toolbar-button--primary" type="button" data-open-file>
+            <span aria-hidden="true">＋</span>
+            <span>打开 Markdown</span>
+          </button>
+        </div>
+      </header>
+
+      <aside class="sidebar" id="sidebar" aria-label="阅读设置">
+        <div class="sidebar__scroll">
+          <section class="sidebar-section open-card">
+            <div class="eyebrow">01 · OPEN</div>
+            <h2>选择一篇文稿</h2>
+            <p>支持 .md、.markdown、.txt。文件只在当前浏览器里读取，不会上传。</p>
+            <button class="primary-button" type="button" data-open-file>打开本地文件</button>
+            <input
+              hidden
+              id="fileInput"
+              aria-hidden="true"
+              tabindex="-1"
+              type="file"
+              accept=".md,.markdown,.mdown,.txt,text/markdown,text/plain"
+            />
+            <button class="text-button" id="sampleButton" type="button">先看示例文章</button>
+          </section>
+
+          <section class="sidebar-section">
+            <div class="section-heading">
+              <div>
+                <div class="eyebrow">02 · LEVEL</div>
+                <h2>词频标注</h2>
+              </div>
+              <output class="range-value" id="cutoffValue" for="cutoff">1200</output>
+            </div>
+
+            <label class="field-label" for="cutoff">
+              隐藏前 <strong id="cutoffLabel">1200</strong> 个高频词
+            </label>
+            <input
+              class="range"
+              id="cutoff"
+              type="range"
+              min="0"
+              max="12000"
+              step="100"
+              value="1200"
+            />
+            <div class="range-caption">
+              <span>标注更多</span>
+              <span>更精简</span>
+            </div>
+
+            <div class="segmented" role="group" aria-label="标注模式">
+              <button class="segmented__button is-active" type="button" data-mode="rare">
+                难词优先
+              </button>
+              <button class="segmented__button" type="button" data-mode="all">
+                全部标注
+              </button>
+            </div>
+
+            <label class="switch-row">
+              <span>
+                <strong>优先识别词组</strong>
+                <small>machine learning → 机器学习</small>
+              </span>
+              <input id="phraseToggle" type="checkbox" checked />
+              <i aria-hidden="true"></i>
+            </label>
+          </section>
+
+          <section class="sidebar-section">
+            <div class="section-heading">
+              <div>
+                <div class="eyebrow">03 · COMFORT</div>
+                <h2>阅读排版</h2>
+              </div>
+            </div>
+
+            <label class="field-label" for="fontSize">
+              正文字号 <strong id="fontSizeValue">19px</strong>
+            </label>
+            <input class="range" id="fontSize" type="range" min="15" max="26" step="1" value="19" />
+
+            <label class="field-label" for="readerWidth">
+              栏宽 <strong id="readerWidthValue">760px</strong>
+            </label>
+            <input class="range" id="readerWidth" type="range" min="560" max="1040" step="20" value="760" />
+          </section>
+
+          <section class="sidebar-section">
+            <div class="section-heading">
+              <div>
+                <div class="eyebrow">04 · VOCABULARY</div>
+                <h2>我的词表</h2>
+              </div>
+              <span class="count-badge" id="knownCount">0</span>
+            </div>
+            <p class="section-copy">
+              点击标注旁的 ✓，即可把当前词直接加入词表；也可以批量导入已有词表。
+            </p>
+            <div class="button-row">
+              <button class="secondary-button" type="button" data-open-known>导入词表</button>
+              <input
+                hidden
+                id="knownInput"
+                aria-hidden="true"
+                tabindex="-1"
+                type="file"
+                accept=".txt,.csv,.md,text/plain,text/csv,text/markdown"
+              />
+              <button class="ghost-button" id="exportKnown" type="button">导出</button>
+            </div>
+            <div class="button-row">
+              <button class="text-button" id="manageKnown" type="button" aria-expanded="false">
+                管理词表
+              </button>
+              <button class="ghost-button" id="clearKnown" type="button">清空</button>
+            </div>
+            <div class="wordbook" id="knownPanel" hidden>
+              <input
+                class="wordbook__filter"
+                id="knownFilter"
+                type="search"
+                placeholder="在词表里搜索…"
+                aria-label="搜索掌握词表"
+              />
+              <div class="wordbook__list" id="knownList"></div>
+              <p class="wordbook__empty" id="knownEmpty" hidden>没有匹配的词条。</p>
+            </div>
+            <div class="wordbook-summary">
+              <strong>生词表（强制标注）</strong>
+              <span class="count-badge" id="forcedCount">0</span>
+            </div>
+            <p class="section-copy">
+              开启顶部「取词标注」后，点正文里任意单词就会标注它，并记进生词表；生词表里的词不受词频阈值限制。
+            </p>
+            <div class="button-row">
+              <button class="text-button" id="manageForced" type="button" aria-expanded="false">
+                管理生词表
+              </button>
+            </div>
+            <div class="wordbook" id="forcedPanel" hidden>
+              <input
+                class="wordbook__filter"
+                id="forcedFilter"
+                type="search"
+                placeholder="在生词表里搜索…"
+                aria-label="搜索生词表"
+              />
+              <div class="wordbook__list" id="forcedList"></div>
+              <p class="wordbook__empty" id="forcedEmpty" hidden>没有匹配的词条。</p>
+            </div>
+          </section>
+
+          <section class="sidebar-section dictionary-section" id="dictionarySection">
+            <div class="section-heading">
+              <div>
+                <div class="eyebrow">05 · DICTIONARY</div>
+                <h2>本地词典</h2>
+              </div>
+              <span class="count-badge" id="dictCount">0</span>
+            </div>
+            <p class="section-copy" id="dictStatus">正在连接本地词典服务…</p>
+            <div class="button-row">
+              <button class="secondary-button" type="button" id="dictRetry">重新连接</button>
+              <button class="ghost-button" type="button" id="dictClearGlosses" hidden>
+                清除所选释义
+              </button>
+            </div>
+            <div class="dictionary-list" id="dictList"></div>
+            <p class="section-copy dictionary-hint">
+              勾选后，标注旁的「典」会在这些词典里查词，你可以挑一条释义显示在词旁。
+            </p>
+          </section>
+
+          <section class="sidebar-section stats-section" aria-live="polite">
+            <div class="section-heading">
+              <div>
+                <div class="eyebrow">06 · SIGNAL</div>
+                <h2>当前阅读</h2>
+              </div>
+            </div>
+            <div class="stats-grid">
+              <div class="stat">
+                <strong id="annotatedStat">0</strong>
+                <span>可见标注</span>
+              </div>
+              <div class="stat">
+                <strong id="phraseStat">0</strong>
+                <span>可见词组</span>
+              </div>
+              <div class="stat">
+                <strong id="unfamiliarStat">0</strong>
+                <span>待学词次</span>
+              </div>
+              <div class="stat">
+                <strong id="uniqueStat">0</strong>
+                <span>不同词</span>
+              </div>
+            </div>
+
+            <div class="legend" aria-label="词频图例">
+              <div class="legend__item legend__item--mid">
+                <i></i><span>1k–5k · 中频</span>
+              </div>
+              <div class="legend__item legend__item--low">
+                <i></i><span>5k–15k · 低频</span>
+              </div>
+              <div class="legend__item legend__item--rare">
+                <i></i><span>15k+ · 罕见</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="sidebar-section toc-section" id="tocSection" hidden>
+            <div class="section-heading">
+              <div>
+                <div class="eyebrow">07 · OUTLINE</div>
+                <h2>文章目录</h2>
+              </div>
+              <span class="toc-mode-badge" id="tocModeBadge" hidden>自动</span>
+            </div>
+            <nav class="toc" id="toc" aria-label="文章目录"></nav>
+          </section>
+
+          <footer class="sidebar-footer">
+            <p>
+              词频来自 wordfreq；释义由 CC-CEDICT 反向整理；公式由 KaTeX 渲染。
+              <button class="link-button" id="aboutButton" type="button">数据说明</button>
+            </p>
+            <p class="shortcuts">
+              O 打开 · A 标注 · V 取词标注 · L 查词 · I 沉浸 · B 添加书签 · ⇧B 书签列表 · D 主题 · T 目录
+            </p>
+          </footer>
+        </div>
+      </aside>
+
+      <main class="workspace" id="workspace">
+        <section class="welcome" id="welcome">
+          <div class="welcome__motifs" aria-hidden="true">
+            <span>resilient <i>有韧性</i></span>
+            <span>nuance <i>细微差别</i></span>
+            <span>serendipity <i>机缘巧合</i></span>
+          </div>
+
+          <div class="welcome__inner">
+            <div class="welcome__index">
+              <span>LOCAL / OFFLINE</span>
+              <span>EN → 中文</span>
+            </div>
+            <h1>把陌生词，<em>留在原句里。</em></h1>
+            <p class="welcome__lead">
+              一个完全本地的 Markdown 阅读器。打开文章，按英语词频隐藏你已熟悉的词，
+              把剩下的中文释义直接标在原文之后。
+            </p>
+            <div class="welcome__actions">
+              <button class="hero-button" type="button" data-open-file>打开我的 .md 文件</button>
+              <button class="hero-link" id="heroSampleButton" type="button">
+                阅读示例 <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+
+            <ol class="feature-list">
+              <li>
+                <span>01</span>
+                <div>
+                  <strong>按词频决定注释</strong>
+                  <p>前 1200 个高频词默认隐身，阈值可以随时调整。</p>
+                </div>
+              </li>
+              <li>
+                <span>02</span>
+                <div>
+                  <strong>中文紧跟原句</strong>
+                  <p>不打断阅读的浮动弹窗，只在陌生词后留下轻量释义。</p>
+                </div>
+              </li>
+              <li>
+                <span>03</span>
+                <div>
+                  <strong>数据不离开电脑</strong>
+                  <p>Markdown、词表与翻译数据都在本地文件里处理。</p>
+                </div>
+              </li>
+            </ol>
+          </div>
+        </section>
+
+        <article class="reader" id="reader" hidden>
+          <div class="reader__rail" aria-hidden="true">
+            <span id="railLabel">MD</span>
+          </div>
+          <div class="reader__sheet">
+            <header class="document-header">
+              <div class="document-header__meta">
+                <span id="documentName">document.md</span>
+                <span id="documentDate">本地文稿</span>
+              </div>
+              <div class="document-header__rule"></div>
+            </header>
+            <div class="document-bookmark" aria-label="书签">
+              <button class="bookmark-button" id="saveBookmark" type="button">
+                <span aria-hidden="true">＋</span>
+                <span id="saveBookmarkLabel">添加书签</span>
+              </button>
+              <div class="bookmark-menu">
+                <button
+                  class="bookmark-button bookmark-button--jump"
+                  id="jumpBookmark"
+                  type="button"
+                  aria-haspopup="menu"
+                  aria-controls="bookmarkPanel"
+                  aria-expanded="false"
+                >
+                  <span aria-hidden="true">◆</span>
+                  <span id="bookmarkCount">书签 0</span>
+                </button>
+                <div
+                  class="bookmark-panel"
+                  id="bookmarkPanel"
+                  role="menu"
+                  aria-label="本文件的书签"
+                  hidden
+                >
+                  <div class="bookmark-panel__header">
+                    <strong>本文件书签</strong>
+                    <span id="bookmarkSummary">还没有书签</span>
+                  </div>
+                  <div class="bookmark-panel__list" id="bookmarkList"></div>
+                </div>
+              </div>
+            </div>
+            <div class="prose" id="content" tabindex="-1"></div>
+          </div>
+          <footer class="document-footer">
+            <span>词频阅读室</span>
+            <span id="footerProgress">END OF DOCUMENT</span>
+          </footer>
+        </article>
+      </main>
+
+      <div class="sidebar-scrim" id="sidebarScrim" hidden></div>
+
+      <div class="drop-overlay" id="dropOverlay" hidden>
+        <div>
+          <span class="drop-overlay__mark">MD</span>
+          <strong>松开即可开始阅读</strong>
+          <p>支持 Markdown 与纯文本</p>
+        </div>
+      </div>
+
+      <button class="immersive-exit" id="immersiveExit" type="button" hidden>
+        <span aria-hidden="true">⤡</span>
+        <span>退出沉浸</span>
+        <span class="immersive-exit__percent" id="immersivePercent"></span>
+      </button>
+
+      <div class="immersive-progress" id="immersiveProgress" aria-hidden="true" hidden>
+        <i id="immersiveProgressBar"></i>
+      </div>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+      <dialog class="about-dialog" id="aboutDialog">
+        <button class="dialog-close" id="aboutClose" type="button" aria-label="关闭">×</button>
+        <div class="eyebrow">DATA NOTE</div>
+        <h2>这些中文从哪里来？</h2>
+        <p>
+          词频排名与 zipf 值来自 <strong>wordfreq</strong>。英文释义来自
+          <strong>CC-CEDICT</strong>，程序将英文释义反向整理为英文词到简体中文的离线词典，
+          并为常见词与技术词组加入人工修正。
+        </p>
+        <dl>
+          <div><dt>词频词数</dt><dd id="metaFrequency">—</dd></div>
+          <div><dt>单词释义</dt><dd id="metaGlossary">—</dd></div>
+          <div><dt>词组释义</dt><dd id="metaPhrases">—</dd></div>
+          <div><dt>词典版本</dt><dd id="metaDictionary">—</dd></div>
+        </dl>
+        <p class="dialog-note">
+          CC-CEDICT 以 CC BY-SA 4.0 许可发布。反向词典是派生数据，同样遵循该许可。
+          所有页面与数据均从本地磁盘加载，不调用翻译接口。
+        </p>
+      </dialog>
+
+      <dialog class="dict-dialog" id="dictDialog">
+        <button class="dialog-close" id="dictClose" type="button" aria-label="关闭">×</button>
+        <div class="dict-dialog__head">
+          <div>
+            <div class="eyebrow">LOCAL DICTIONARY</div>
+            <h2 id="dictWord">—</h2>
+            <p class="dict-dialog__meta" id="dictWordMeta"></p>
+          </div>
+          <form class="dict-search" id="dictSearchForm">
+            <input
+              id="dictSearch"
+              type="search"
+              placeholder="查另一个词…"
+              aria-label="在本地词典里查词"
+            />
+            <button class="primary-button" type="submit">查询</button>
+          </form>
+        </div>
+        <div class="dict-tabs" id="dictTabs" role="tablist"></div>
+        <div class="dict-senses" id="dictSenses"></div>
+        <label class="switch-row dict-toggle">
+          <span>
+            <strong>展开完整词条</strong>
+            <small>按词典原始排版查看</small>
+          </span>
+          <input id="dictFullToggle" type="checkbox" />
+          <i aria-hidden="true"></i>
+        </label>
+        <div class="dict-article" id="dictArticle" hidden></div>
+        <div class="dict-actions">
+          <button class="ghost-button" type="button" id="dictOpenGolden">在 Goldendict 中打开</button>
+          <button class="ghost-button" type="button" id="dictResetGloss" hidden>恢复默认释义</button>
+        </div>
+      </dialog>
+    </div>
+
+    <script src="./vendor/markdown-it.min.js"></script>
+    <script src="./vendor/katex/katex.min.js"></script>
+    <script src="./vendor/markdown-it-katex.js"></script>
+    <script src="./data/frequency.js"></script>
+    <script src="./data/glossary.js"></script>
+    <script src="./data/phrases.js"></script>
+    <script src="./sample.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

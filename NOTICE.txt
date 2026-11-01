@@ -1,0 +1,45 @@
+Third-party data and software
+==============================
+
+CC-CEDICT
+---------
+Dictionary data derived from CC-CEDICT.
+Source: https://www.mdbg.net/chinese/dictionary?page=cc-cedict
+License: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+
+The generated reverse English-to-Chinese glossary is derivative data and is
+distributed under the same CC BY-SA 4.0 license.
+
+wordfreq
+--------
+Used during local data generation to calculate English and Chinese frequency
+rankings and zipf scores.
+https://github.com/quip/wordfreq
+
+markdown-it
+-----------
+Bundled in vendor/markdown-it.min.js.
+https://github.com/markdown-it/markdown-it
+License: MIT
+
+KaTeX
+-----
+Bundled in vendor/katex/.
+https://github.com/KaTeX/KaTeX
+License: MIT
+
+markdown-it-katex
+-----------------
+Browser adapter in vendor/markdown-it-katex.js, based on markdown-it-katex 2.0.3.
+https://github.com/waylonflinn/markdown-it-katex
+License: MIT
+
+js-mdict
+--------
+Bundled in vendor/jsdict/, used by server.mjs to read local MDX dictionaries.
+https://github.com/terasum/js-mdict
+License: MIT (6.0.8)
+
+Dictionary files themselves (MDX) are not redistributed with this project;
+they are read in place from the user's own GoldenDict dictionary folders.

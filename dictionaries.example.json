@@ -1,0 +1,6 @@
+{
+  "roots": [
+    "/path/to/your/mdx/dictionaries"
+  ],
+  "exclude": []
+}
